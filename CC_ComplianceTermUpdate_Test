@@ -1,0 +1,39 @@
+//Known working test class fo the Compliamce term update trigger, as of 6/1/17
+
+@isTest
+public class CC_ComplianceTermUpdate_Test  {
+	
+    static testmethod void testMonthlyFrequency() {
+        Case newCase = new Case();
+        newCase.status = 'New';
+        newCase.origin = 'Phone';
+        insert newCase;
+       
+        CC_ComplianceTerm__c compTerm = new CC_ComplianceTerm__c();
+        compTerm.CC_Frequency__c = 'Monthly';
+        compTerm.CC_Created_Term_Date__c = system.today()+2;
+        compTerm.CC_Compliance_Case__c=newCase.Id;
+        compTerm.CC_Number_of_Payments__c= 5;
+        insert compTerm;
+        List<Task> aTaskTestList = [SELECT id FROM Task WHERE whatid =: compTerm.Id];
+        system.assert(aTaskTestList.size()==5);
+    }
+    
+    
+    static testmethod void testOneTimeFrequency() {
+        Case newCase = new Case();
+        newCase.status = 'New';
+        newCase.origin = 'Phone';
+        insert newCase;
+        CC_ComplianceTerm__c compTerm = new CC_ComplianceTerm__c();
+        compTerm.CC_Frequency__c = 'One-Time';
+        compTerm.CC_Created_Term_Date__c = system.today()+2;
+        compTerm.CC_Compliance_Case__c=newCase.Id;
+        insert compTerm;
+        
+        List<Task> aTaskTestList = [SELECT id FROM Task WHERE whatid =: compTerm.Id];
+        system.assert(aTaskTestList.size()==1);
+        
+    }
+   
+}
