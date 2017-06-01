@@ -1,0 +1,73 @@
+//trigger to automatically update a task list with the number of occurences 
+trigger CC_ComplianceTermUpdate on CC_ComplianceTerm__c (after insert) {
+ 
+	system.debug('In CC_ComplianceTermUpdate trigger');
+	//created a new list, 
+	List<Task> aTaskList = new List<Task>();
+	
+	//loop over trigger
+	for(CC_ComplianceTerm__c compTerm : trigger.new){
+	
+    	if(compTerm.CC_Frequency__c == 'Monthly' && compTerm.CC_number_Of_Payments__c > 1){
+            system.debug('If condition to go create task met');
+            for(integer i=1; i <= compTerm.CC_Number_of_Payments__c; i++){
+                system.debug('creating task');
+                task aTask = new task ();
+                aTask.subject = 'Call or Email';
+                aTask.ActivityDate =  compTerm.CC_Last_Day_of_Month__c;
+                aTask.OwnerId = compTerm.CreatedById;
+               
+                
+               
+                /**code from salesforce community, supposed to help set compliance terms 053017MattMarsh//
+                Task aTask = new Task(Subject = 'test', isRecurrence = true, RecurrenceDayOfWeekMask = 4, RecurrenceType = 'RecursMonthlyNth',
+                  RecurrenceEndDateOnly = date.newinstance(2012, 04, 01), RecurrenceInstance = 'First',
+                  RecurrenceInterval = 1, RecurrenceStartDateOnly = date.newinstance(2012, 01, 01));
+				insert aTask;
+                **/
+            
+                /**Code that was added by Matthew Marsh 053017, "Isn't complete, but give it a try":
+                Task aTask = new Task();
+        		aTask.Subject = 'test';
+        		aTask.IsRecurrence = true;
+        		aTask.RecurrenceType = 'RecursMonthlyNth';
+        		aTask.RecurrenceInterval = 1;
+        		aTask.WhatId = compTerm.id;
+                aTask.RecurrenceStartDateOnly = System.today();
+                aTask.RecurrenceDayOfWeekMask = 4;
+                aTask.RecurrenceInstance = 'First';
+                aTask.RecurrenceEndDateOnly = system.today() + 365;
+                insert aTask;**/
+       
+
+                //tying the task to the variable for our compliance term
+                aTask.WhatId = compTerm.Id;
+                aTaskList.add(aTask);
+            }
+    	}else if (compTerm.CC_Frequency__c == 'One-Time'){
+            system.debug('If condition to go create task met');
+            system.debug('creating task');
+            //Making a new task, along with its related components and fields
+            task aTask = new task ();
+            aTask.subject = 'Call or Email';
+            //tying the task to the variable for our compliance term
+            aTask.WhatId = compTerm.Id;
+            aTaskList.add(aTask);	
+		
+        }/**else (compTerm.CC_Frequency__c == 'Yearly'){
+          	system.debug('If condition to go create task met');
+            system.debug('creating task');
+			task aTask = new task();
+			aTask.subject = 'Call or Email'
+			aTask.WhatId = compTerm.Id;
+			aTaskList.add(aTask)
+       
+
+
+		**/
+        
+    }
+            
+        insert aTaskList;
+        system.debug('exiting CC_ComplianceTermUpdate trigger');
+    }
