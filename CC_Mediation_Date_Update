@@ -1,0 +1,20 @@
+//This trigger checks to see if the supervisor approval checkbox is true, then updates the mediation approval date on the case
+
+
+trigger CC_Mediation_Approval_Update on CC_Case_Document__c (Before update){
+
+  List<ID> caseListIds = New List<ID>();
+
+  for(CC_Case_Document__c aCaseDoc : Trigger.new){
+    if(aCaseDOC.CC_Approved_by_Supervisor__c == true){
+      caseListIds.add(aCaseDoc.CC_CaseDocument_Case__c);
+    }
+  }
+
+  List<case> caseList = [SELECT id, CC_Mediation_Approval_Date__c FROM case WHERE id in :caseListIds];
+  for(integer i = 0 ; i < caseList.size(); i++){
+    caseList[i].CC_Mediation_Approval_Date__c = date.TODAY();
+  }
+
+  update caseList;
+}
